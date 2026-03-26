@@ -210,6 +210,18 @@
     </div>
   </div>
 
+  <!-- Polymarket Positions -->
+  <div class="table-card">
+    <h3>Polymarket Positions</h3>
+    <table>
+      <thead>
+        <tr><th>Market</th><th>Outcome</th><th>Shares</th><th>Avg Price</th><th>Current</th><th>Invested</th><th>Value</th><th>P&amp;L</th></tr>
+      </thead>
+      <tbody id="positions-body"></tbody>
+    </table>
+    <div id="positions-total" style="margin-top:12px;font-weight:600;"></div>
+  </div>
+
   <!-- Transactions -->
   <div class="table-card">
     <h3>Transaction Log</h3>
@@ -399,6 +411,31 @@ function renderDashboard() {
       <td style="color:var(--muted);font-size:13px">${ch.detail}</td>
     </tr>`;
   }).join('');
+
+  // Polymarket Positions
+  if (DATA.polymarketPositions) {
+    const posBody = document.getElementById('positions-body');
+    let totalInvested = 0, totalValue = 0;
+    posBody.innerHTML = DATA.polymarketPositions.map(p => {
+      const value = p.shares * p.currentPrice;
+      const pnl = value - p.spent;
+      const pnlPct = (pnl / p.spent * 100);
+      totalInvested += p.spent;
+      totalValue += value;
+      return `<tr>
+        <td>${p.market}</td>
+        <td><strong>${p.outcome}</strong></td>
+        <td>${p.shares.toFixed(1)}</td>
+        <td>$${p.avgPrice.toFixed(3)}</td>
+        <td>$${p.currentPrice.toFixed(3)}</td>
+        <td>$${p.spent.toFixed(2)}</td>
+        <td>$${value.toFixed(2)}</td>
+        <td style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct.toFixed(1)}%)</td>
+      </tr>`;
+    }).join('');
+    const totalPnl = totalValue - totalInvested;
+    document.getElementById('positions-total').innerHTML = `Total Invested: $${totalInvested.toFixed(2)} | Current Value: $${totalValue.toFixed(2)} | P&L: <span style="color:${totalPnl >= 0 ? 'var(--green)' : 'var(--red)'}"> ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)}</span>`;
+  }
 
   // Daily Reports
   const reportsList = document.getElementById('reports-list');
