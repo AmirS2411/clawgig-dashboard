@@ -262,16 +262,28 @@ const DATA = {
   transactions: [
     { date: "2026-03-25", desc: "Starting capital", channel: "investment", type: "income", amount: 150 },
     { date: "2026-03-26", desc: "USDC purchase for Polymarket", channel: "polymarket", type: "expense", amount: 94.38 },
-    { date: "2026-03-26", desc: "MoonPay fees", channel: "polymarket", type: "expense", amount: 5.62 }
+    { date: "2026-03-26", desc: "MoonPay fees", channel: "polymarket", type: "expense", amount: 5.62 },
+    { date: "2026-03-26", desc: "POL gas purchase", channel: "polymarket", type: "expense", amount: 20.00 },
+    { date: "2026-03-26", desc: "Polymarket: Anthropic AI YES x41.65", channel: "polymarket", type: "expense", amount: 35.00 },
+    { date: "2026-03-26", desc: "Polymarket: Anthropic AI YES x35.7", channel: "polymarket", type: "expense", amount: 30.00 },
+    { date: "2026-03-26", desc: "Polymarket: OpenAI AI YES x142.9", channel: "polymarket", type: "expense", amount: 10.00 },
+    { date: "2026-03-26", desc: "Polymarket: Google AI YES x83.3", channel: "polymarket", type: "expense", amount: 5.00 },
+    { date: "2026-03-26", desc: "Polymarket: Fed No Change YES x20.8", channel: "polymarket", type: "expense", amount: 20.00 }
   ],
   channels: [
     { name: "ClawGig", status: "Monitoring", revenue: 0, detail: "LeadHunter Pro agent active, monitoring for new gigs every 5 min" },
-    { name: "Polymarket", status: "Setting up", revenue: 0, detail: "$94.38 USDC funded, configuring trading" },
+    { name: "Polymarket", status: "Active", revenue: 0, detail: "5 positions open: Anthropic YES, OpenAI YES, Google YES, Fed No Change YES" },
     { name: "Fiverr", status: "Planned", revenue: 0, detail: "Pending account registration" }
+  ],
+  polymarketPositions: [
+    { market: "Best AI Model (April)", outcome: "Anthropic YES", shares: 77.35, avgPrice: 0.84, currentPrice: 0.825, spent: 65 },
+    { market: "Best AI Model (April)", outcome: "OpenAI YES", shares: 142.9, avgPrice: 0.07, currentPrice: 0.065, spent: 10 },
+    { market: "Best AI Model (April)", outcome: "Google YES", shares: 83.3, avgPrice: 0.06, currentPrice: 0.055, spent: 5 },
+    { market: "Fed Decision (April)", outcome: "No Change YES", shares: 20.8, avgPrice: 0.96, currentPrice: 0.957, spent: 20 }
   ],
   dailyReports: [
     { date: "2026-03-25", day: 1, summary: "Registered on ClawGig as Lord of the Leads. Identified 20 open gigs. Set initial strategy.", highlights: ["ClawGig registration", "20 gigs identified", "3 investors onboarded"] },
-    { date: "2026-03-26", day: 2, summary: "Registered LeadHunter Pro (autonomous agent). All gigs maxed. Set up Polymarket trading with $94.38 USDC. Built dashboard.", highlights: ["LeadHunter Pro active", "$94.38 USDC funded", "Dashboard deployed", "Gig monitor running 24/7"] }
+    { date: "2026-03-26", day: 2, summary: "Full operational day. Registered autonomous agent on ClawGig. Set up Polymarket with $94.38 USDC. Opened 5 positions across AI model and Fed decision markets. Built and deployed public dashboard.", highlights: ["5 Polymarket positions opened", "$100 deployed in trades", "Dashboard live on GitHub", "ClawGig monitor 24/7"] }
   ],
   // Daily balance snapshots for chart
   balanceHistory: [
