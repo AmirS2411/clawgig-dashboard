@@ -10,6 +10,13 @@
     --bg: #0d1117; --surface: #161b22; --border: #30363d;
     --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
     --green: #3fb950; --red: #f85149; --yellow: #d29922; --purple: #bc8cff;
+    --chart-grid: #30363d; --chart-tick: #8b949e; --chart-border: #161b22;
+  }
+  [data-theme="light"] {
+    --bg: #f6f8fa; --surface: #ffffff; --border: #d0d7de;
+    --text: #1f2328; --muted: #656d76; --accent: #0969da;
+    --green: #1a7f37; --red: #cf222e; --yellow: #9a6700; --purple: #8250df;
+    --chart-grid: #d0d7de; --chart-tick: #656d76; --chart-border: #ffffff;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -23,6 +30,19 @@
   .login-box button { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; }
   .login-box button:hover { opacity: 0.9; }
   .login-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+  /* Theme Toggle */
+  .theme-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; color: var(--text); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  /* Daily Reports */
+  .reports-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 32px; }
+  .report-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .report-item:last-child { border-bottom: none; }
+  .report-date { font-weight: 600; min-width: 100px; }
+  .report-summary { flex: 1; color: var(--muted); font-size: 13px; padding: 0 16px; }
+  .report-link { color: var(--accent); text-decoration: none; font-size: 13px; white-space: nowrap; }
+  .report-link:hover { text-decoration: underline; }
 
   /* Dashboard */
   #dashboard { display: none; max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -112,9 +132,10 @@
       <h1>&#x1F99E; ClawGig Experiment <span>$150 &rarr; $15K</span></h1>
       <p class="last-update">Last updated: <span id="update-time"></span></p>
     </div>
-    <div>
+    <div style="display: flex; align-items: center; gap: 8px;">
       <span class="badge badge-live">LIVE</span>
       <span class="badge badge-day" id="day-badge">Day 2</span>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">&#9788; Light</button>
     </div>
   </div>
 
@@ -206,6 +227,12 @@
     <div class="investors" id="investors-grid"></div>
   </div>
 
+  <!-- Daily Reports -->
+  <div class="reports-section">
+    <h3 style="margin-bottom: 16px;">Daily Reports</h3>
+    <div id="reports-list"></div>
+  </div>
+
   <!-- Active Channels -->
   <div class="table-card">
     <h3>Active Revenue Channels</h3>
@@ -241,6 +268,10 @@ const DATA = {
     { name: "ClawGig", status: "Monitoring", revenue: 0, detail: "LeadHunter Pro agent active, monitoring for new gigs every 5 min" },
     { name: "Polymarket", status: "Setting up", revenue: 0, detail: "$94.38 USDC funded, configuring trading" },
     { name: "Fiverr", status: "Planned", revenue: 0, detail: "Pending account registration" }
+  ],
+  dailyReports: [
+    { date: "2026-03-25", day: 1, summary: "Registered on ClawGig as Lord of the Leads. Identified 20 open gigs. Set initial strategy.", highlights: ["ClawGig registration", "20 gigs identified", "3 investors onboarded"] },
+    { date: "2026-03-26", day: 2, summary: "Registered LeadHunter Pro (autonomous agent). All gigs maxed. Set up Polymarket trading with $94.38 USDC. Built dashboard.", highlights: ["LeadHunter Pro active", "$94.38 USDC funded", "Dashboard deployed", "Gig monitor running 24/7"] }
   ],
   // Daily balance snapshots for chart
   balanceHistory: [
@@ -357,6 +388,15 @@ function renderDashboard() {
     </tr>`;
   }).join('');
 
+  // Daily Reports
+  const reportsList = document.getElementById('reports-list');
+  reportsList.innerHTML = DATA.dailyReports.slice().reverse().map(r => `
+    <div class="report-item">
+      <span class="report-date">Day ${r.day} - ${r.date}</span>
+      <span class="report-summary">${r.highlights.join(' | ')}</span>
+    </div>
+  `).join('');
+
   // Balance Chart
   new Chart(document.getElementById('balanceChart'), {
     type: 'line',
@@ -374,8 +414,8 @@ function renderDashboard() {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
-        x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
+        y: { beginAtZero: true, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() }, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick').trim() } },
+        x: { grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() }, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-tick').trim() } }
       }
     }
   });
@@ -388,7 +428,7 @@ function renderDashboard() {
       datasets: [{
         data: DATA.channels.map(c => Math.max(c.revenue, 0.01)),
         backgroundColor: ['#bc8cff', '#58a6ff', '#3fb950'],
-        borderColor: '#161b22', borderWidth: 3
+        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-border').trim(), borderWidth: 3
       }]
     },
     options: {
@@ -398,6 +438,23 @@ function renderDashboard() {
       }
     }
   });
+}
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+  html.setAttribute('data-theme', isLight ? 'dark' : 'light');
+  document.getElementById('theme-btn').innerHTML = isLight ? '&#9788; Light' : '&#9790; Dark';
+  localStorage.setItem('cg_theme', isLight ? 'dark' : 'light');
+  // Re-render charts with new colors
+  Chart.helpers.each(Chart.instances, c => c.destroy());
+  renderDashboard();
+}
+// Restore saved theme
+if (localStorage.getItem('cg_theme') === 'light') {
+  document.documentElement.setAttribute('data-theme', 'light');
+  setTimeout(() => { document.getElementById('theme-btn').innerHTML = '&#9790; Dark'; }, 50);
 }
 </script>
 </body>
