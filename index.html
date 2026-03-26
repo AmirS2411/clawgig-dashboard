@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawGig Experiment - $150 to $15K Challenge</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --red: #f85149; --yellow: #d29922; --purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Login */
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; width: 90%; }
+  .login-box h1 { font-size: 28px; margin-bottom: 8px; }
+  .login-box .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+  .login-box input { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; margin-bottom: 16px; }
+  .login-box button { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; }
+  .login-box button:hover { opacity: 0.9; }
+  .login-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+  /* Dashboard */
+  #dashboard { display: none; max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+  .header h1 { font-size: 24px; }
+  .header h1 span { color: var(--accent); }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-live { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-day { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .last-update { color: var(--muted); font-size: 12px; }
+
+  /* Metric Cards */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .metric-label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+  .metric-value { font-size: 32px; font-weight: 700; }
+  .metric-sub { font-size: 13px; margin-top: 4px; }
+  .text-green { color: var(--green); }
+  .text-red { color: var(--red); }
+  .text-yellow { color: var(--yellow); }
+  .text-accent { color: var(--accent); }
+  .text-purple { color: var(--purple); }
+
+  /* Progress Bar */
+  .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 32px; }
+  .progress-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
+  .progress-bar-bg { background: var(--bg); border-radius: 8px; height: 24px; overflow: hidden; position: relative; }
+  .progress-bar-fill { height: 100%; border-radius: 8px; transition: width 0.5s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; min-width: 40px; }
+  .progress-bar-fill.revenue { background: linear-gradient(90deg, var(--green), #2ea043); }
+  .progress-bar-fill.time { background: linear-gradient(90deg, var(--accent), #1f6feb); }
+  .progress-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+  /* Charts */
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .chart-card h3 { margin-bottom: 16px; font-size: 16px; }
+
+  /* Transactions Table */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 32px; }
+  .table-card h3 { margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  .channel-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .ch-clawgig { background: rgba(188,140,255,0.15); color: var(--purple); }
+  .ch-polymarket { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .ch-fiverr { background: rgba(63,185,80,0.15); color: var(--green); }
+  .ch-investment { background: rgba(210,153,34,0.15); color: var(--yellow); }
+
+  /* Investors */
+  .investors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .investor-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+  .investor-name { font-weight: 600; margin-bottom: 4px; }
+  .investor-amount { font-size: 24px; font-weight: 700; color: var(--green); }
+  .investor-roi { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  /* Footer */
+  .footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 0; border-top: 1px solid var(--border); }
+
+  @media (max-width: 600px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .charts { grid-template-columns: 1fr; }
+    .investors { grid-template-columns: 1fr; }
+    .header h1 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size: 48px; margin-bottom: 16px;">&#x1F99E;</div>
+    <h1>ClawGig Experiment</h1>
+    <p class="subtitle">$150 &rarr; $15,000 Challenge Dashboard</p>
+    <input type="password" id="pwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Enter Dashboard</button>
+    <p class="login-error" id="login-err">Wrong password. Try again.</p>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="header">
+    <div>
+      <h1>&#x1F99E; ClawGig Experiment <span>$150 &rarr; $15K</span></h1>
+      <p class="last-update">Last updated: <span id="update-time"></span></p>
+    </div>
+    <div>
+      <span class="badge badge-live">LIVE</span>
+      <span class="badge badge-day" id="day-badge">Day 2</span>
+    </div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">Starting Capital</div>
+      <div class="metric-value">$150</div>
+      <div class="metric-sub text-accent">3 investors x $50</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Current Balance</div>
+      <div class="metric-value" id="balance">$150.00</div>
+      <div class="metric-sub" id="balance-change"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Revenue</div>
+      <div class="metric-value text-green" id="revenue">$0.00</div>
+      <div class="metric-sub" id="revenue-sub">No revenue yet</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Expenses</div>
+      <div class="metric-value text-red" id="expenses">$0.00</div>
+      <div class="metric-sub" id="expenses-sub"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Target</div>
+      <div class="metric-value text-purple">$15,000</div>
+      <div class="metric-sub" id="target-pct">0.0% achieved</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Days Remaining</div>
+      <div class="metric-value text-yellow" id="days-left">12</div>
+      <div class="metric-sub" id="deadline-sub">Deadline: Apr 8, 2026</div>
+    </div>
+  </div>
+
+  <!-- Progress Bars -->
+  <div class="progress-section">
+    <h3 style="margin-bottom: 20px;">Progress vs Target</h3>
+    <div style="margin-bottom: 16px;">
+      <div class="progress-header">
+        <span>Revenue Progress</span>
+        <span id="rev-pct-label">0.0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill revenue" id="rev-bar" style="width: 1%;">0%</div>
+      </div>
+      <div class="progress-labels"><span>$0</span><span>$15,000</span></div>
+    </div>
+    <div>
+      <div class="progress-header">
+        <span>Time Elapsed</span>
+        <span id="time-pct-label">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill time" id="time-bar" style="width: 1%;">0%</div>
+      </div>
+      <div class="progress-labels"><span>Mar 25</span><span>Apr 8</span></div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts">
+    <div class="chart-card">
+      <h3>Balance Over Time</h3>
+      <canvas id="balanceChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Revenue by Channel</h3>
+      <canvas id="channelChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Transactions -->
+  <div class="table-card">
+    <h3>Transaction Log</h3>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Description</th><th>Channel</th><th>Type</th><th>Amount</th><th>Balance</th></tr>
+      </thead>
+      <tbody id="tx-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Investors -->
+  <div>
+    <h3 style="margin-bottom: 16px;">Investors</h3>
+    <div class="investors" id="investors-grid"></div>
+  </div>
+
+  <!-- Active Channels -->
+  <div class="table-card">
+    <h3>Active Revenue Channels</h3>
+    <table>
+      <thead><tr><th>Channel</th><th>Status</th><th>Revenue</th><th>Details</th></tr></thead>
+      <tbody id="channels-body"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p>&#x1F99E; ClawGig Experiment Dashboard | Built by AmirosAI | Data updates automatically</p>
+  </div>
+</div>
+
+<script>
+// ===== DATA (auto-updated by script) =====
+const DATA = {
+  startDate: "2026-03-25",
+  deadline: "2026-04-08",
+  target: 15000,
+  startingCapital: 150,
+  investors: [
+    { name: "Amir Shneider", amount: 50 },
+    { name: "Rinat Keinan", amount: 50 },
+    { name: "Alex Polanski", amount: 50 }
+  ],
+  transactions: [
+    { date: "2026-03-25", desc: "Starting capital", channel: "investment", type: "income", amount: 150 },
+    { date: "2026-03-26", desc: "USDC purchase for Polymarket", channel: "polymarket", type: "expense", amount: 94.38 },
+    { date: "2026-03-26", desc: "MoonPay fees", channel: "polymarket", type: "expense", amount: 5.62 }
+  ],
+  channels: [
+    { name: "ClawGig", status: "Monitoring", revenue: 0, detail: "LeadHunter Pro agent active, monitoring for new gigs every 5 min" },
+    { name: "Polymarket", status: "Setting up", revenue: 0, detail: "$94.38 USDC funded, configuring trading" },
+    { name: "Fiverr", status: "Planned", revenue: 0, detail: "Pending account registration" }
+  ],
+  // Daily balance snapshots for chart
+  balanceHistory: [
+    { date: "Mar 25", balance: 150 },
+    { date: "Mar 26", balance: 150 }
+  ]
+};
+
+// ===== PASSWORD =====
+const HASH = "a3f5b6c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5";
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function doLogin() {
+  const pwd = document.getElementById('pwd').value;
+  // Simple password check - "clawgig2026"
+  if (pwd === 'clawgig2026') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    sessionStorage.setItem('cg_auth', '1');
+    renderDashboard();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+if (sessionStorage.getItem('cg_auth') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  setTimeout(renderDashboard, 100);
+}
+
+// ===== RENDER =====
+function renderDashboard() {
+  const now = new Date();
+  const start = new Date(DATA.startDate);
+  const end = new Date(DATA.deadline);
+  const totalDays = (end - start) / 86400000;
+  const elapsed = Math.min((now - start) / 86400000, totalDays);
+  const daysLeft = Math.max(0, Math.ceil((end - now) / 86400000));
+  const dayNum = Math.ceil(elapsed) || 1;
+
+  // Calculate financials
+  let balance = 0, totalRev = 0, totalExp = 0;
+  DATA.transactions.forEach(tx => {
+    if (tx.type === 'income') { totalRev += tx.amount; balance += tx.amount; }
+    else { totalExp += tx.amount; balance -= tx.amount; }
+  });
+  const netRevenue = totalRev - DATA.startingCapital; // Revenue excluding starting capital
+  const revenueFromWork = Math.max(0, netRevenue);
+  const pctTarget = (revenueFromWork / DATA.target * 100);
+  const pctTime = (elapsed / totalDays * 100);
+
+  // Update DOM
+  document.getElementById('update-time').textContent = now.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  document.getElementById('day-badge').textContent = `Day ${dayNum}`;
+  document.getElementById('balance').textContent = `$${balance.toFixed(2)}`;
+  const balChange = balance - DATA.startingCapital;
+  document.getElementById('balance-change').textContent = `${balChange >= 0 ? '+' : ''}$${balChange.toFixed(2)} from start`;
+  document.getElementById('balance-change').className = `metric-sub ${balChange >= 0 ? 'text-green' : 'text-red'}`;
+  document.getElementById('revenue').textContent = `$${revenueFromWork.toFixed(2)}`;
+  document.getElementById('revenue-sub').textContent = revenueFromWork > 0 ? `${(revenueFromWork/DATA.target*100).toFixed(1)}% of target` : 'No revenue yet';
+  document.getElementById('expenses').textContent = `$${totalExp.toFixed(2)}`;
+  document.getElementById('expenses-sub').textContent = `${(totalExp/DATA.startingCapital*100).toFixed(0)}% of capital deployed`;
+  document.getElementById('target-pct').textContent = `${pctTarget.toFixed(2)}% achieved`;
+  document.getElementById('days-left').textContent = daysLeft;
+
+  // Progress bars
+  const revW = Math.max(1, Math.min(100, pctTarget));
+  document.getElementById('rev-bar').style.width = revW + '%';
+  document.getElementById('rev-bar').textContent = pctTarget.toFixed(1) + '%';
+  document.getElementById('rev-pct-label').textContent = pctTarget.toFixed(1) + '%';
+  const timeW = Math.max(1, Math.min(100, pctTime));
+  document.getElementById('time-bar').style.width = timeW + '%';
+  document.getElementById('time-bar').textContent = pctTime.toFixed(0) + '%';
+  document.getElementById('time-pct-label').textContent = pctTime.toFixed(0) + '%';
+
+  // Transactions table
+  const tbody = document.getElementById('tx-body');
+  let runBal = 0;
+  tbody.innerHTML = DATA.transactions.map(tx => {
+    if (tx.type === 'income') runBal += tx.amount; else runBal -= tx.amount;
+    const chClass = `ch-${tx.channel}`;
+    return `<tr>
+      <td>${tx.date}</td>
+      <td>${tx.desc}</td>
+      <td><span class="channel-badge ${chClass}">${tx.channel}</span></td>
+      <td style="color: ${tx.type==='income' ? 'var(--green)' : 'var(--red)'}">${tx.type==='income' ? 'Income' : 'Expense'}</td>
+      <td style="color: ${tx.type==='income' ? 'var(--green)' : 'var(--red)'}">${tx.type==='income' ? '+' : '-'}$${tx.amount.toFixed(2)}</td>
+      <td>$${runBal.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  // Investors
+  const invGrid = document.getElementById('investors-grid');
+  invGrid.innerHTML = DATA.investors.map(inv => {
+    const roi = ((balance / DATA.startingCapital - 1) * 100);
+    return `<div class="investor-card">
+      <div class="investor-name">${inv.name}</div>
+      <div class="investor-amount">$${inv.amount}</div>
+      <div class="investor-roi">Current ROI: ${roi.toFixed(1)}%</div>
+    </div>`;
+  }).join('');
+
+  // Channels
+  const chBody = document.getElementById('channels-body');
+  chBody.innerHTML = DATA.channels.map(ch => {
+    const statusColor = ch.status === 'Active' ? 'var(--green)' : ch.status === 'Monitoring' ? 'var(--yellow)' : 'var(--muted)';
+    return `<tr>
+      <td><strong>${ch.name}</strong></td>
+      <td style="color:${statusColor}">${ch.status}</td>
+      <td class="text-green">$${ch.revenue.toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:13px">${ch.detail}</td>
+    </tr>`;
+  }).join('');
+
+  // Balance Chart
+  new Chart(document.getElementById('balanceChart'), {
+    type: 'line',
+    data: {
+      labels: DATA.balanceHistory.map(d => d.date),
+      datasets: [{
+        label: 'Balance ($)',
+        data: DATA.balanceHistory.map(d => d.balance),
+        borderColor: '#58a6ff',
+        backgroundColor: 'rgba(88,166,255,0.1)',
+        fill: true, tension: 0.3, pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
+        x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
+      }
+    }
+  });
+
+  // Channel Revenue Chart
+  new Chart(document.getElementById('channelChart'), {
+    type: 'doughnut',
+    data: {
+      labels: DATA.channels.map(c => c.name),
+      datasets: [{
+        data: DATA.channels.map(c => Math.max(c.revenue, 0.01)),
+        backgroundColor: ['#bc8cff', '#58a6ff', '#3fb950'],
+        borderColor: '#161b22', borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8b949e', padding: 16 } }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
